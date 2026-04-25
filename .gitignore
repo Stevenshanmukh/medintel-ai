@@ -46,3 +46,7 @@ models_cache/
 
 # Alembic - keep migrations, ignore local artifacts
 backend/alembic/versions/__pycache__/
+
+# One-off install scripts
+install-*.ps1
+*.ps1
