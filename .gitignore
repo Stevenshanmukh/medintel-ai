@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Node
+node_modules/
+.next/
+out/
+.vercel
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Project-specific
+data/audio/
+data/uploads/
+backend/scripts/output/
+*.log
+
+# Models cache (HuggingFace downloads can be huge)
+models_cache/
+
+# Alembic - keep migrations, ignore local artifacts
+backend/alembic/versions/__pycache__/
