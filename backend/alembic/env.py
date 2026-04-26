@@ -5,7 +5,7 @@ from alembic import context
 
 from app.config import settings
 from app.db.session import Base
-from app.models import Patient, Visit, VisitChunk  # noqa: F401
+from app.models import Patient, Visit, VisitChunk, VisitEntity  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.database_url)

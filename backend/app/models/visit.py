@@ -20,3 +20,4 @@ class Visit(Base):
 
     patient = relationship("Patient", back_populates="visits")
     chunks = relationship("VisitChunk", back_populates="visit", cascade="all, delete-orphan")
+    entities = relationship("VisitEntity", back_populates="visit", cascade="all, delete-orphan")

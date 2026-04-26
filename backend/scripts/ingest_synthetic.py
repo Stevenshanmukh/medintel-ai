@@ -3,7 +3,9 @@ Seed script: load synthetic patient and visits into the database.
 
 Run from inside the backend container:
     docker exec -it medintel_backend python -m scripts.ingest_synthetic
+    docker exec -it medintel_backend python -m scripts.ingest_synthetic --force
 """
+import argparse
 import json
 from datetime import datetime
 from pathlib import Path
@@ -16,7 +18,7 @@ from app.models import Patient
 DATA_FILE = Path("/app/data/synthetic/sarah_chen_visits.json")
 
 
-def main() -> None:
+def main(force: bool = False) -> None:
     if not DATA_FILE.exists():
         raise FileNotFoundError(
             f"Synthetic data not found at {DATA_FILE}. "
@@ -29,9 +31,16 @@ def main() -> None:
     db = SessionLocal()
     try:
         existing = db.query(Patient).filter(Patient.mrn == data["patient"]["mrn"]).first()
-        if existing:
+
+        if existing and not force:
             print(f"Patient {existing.mrn} already exists (id={existing.id}). Skipping.")
+            print("Pass --force to delete and re-ingest.")
             return
+
+        if existing and force:
+            print(f"Deleting existing patient {existing.mrn} and all related data...")
+            db.delete(existing)
+            db.commit()
 
         patient_data = data["patient"]
         patient = Patient(
@@ -53,7 +62,7 @@ def main() -> None:
                 transcript=visit_data["transcript"],
                 chief_complaint=visit_data.get("chief_complaint"),
             )
-            print(f"  -> visit {visit.id}: {len(visit.chunks)} chunks embedded")
+            print(f"  -> visit {visit.id}: {len(visit.chunks)} chunks, {len(visit.entities)} entities")
 
         print(f"\nDone. Loaded {len(data['visits'])} visits for {patient.name}.")
     finally:
@@ -61,4 +70,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true", help="Delete existing patient and re-ingest.")
+    args = parser.parse_args()
+    main(force=args.force)
