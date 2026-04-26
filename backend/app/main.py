@@ -1,14 +1,32 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api import patients, query
+from app.core.embeddings import get_embedding_model
+from app.core.reranking import get_reranker
 from app.db.session import get_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Pre-load ML models so the first request isn't slow."""
+    print("Loading embedding model...")
+    get_embedding_model()
+    print("Loading reranker model...")
+    get_reranker()
+    print("Models ready.")
+    yield
+
 
 app = FastAPI(
     title="MedIntel AI",
     description="Clinical intelligence system",
-    version="0.1.0",
+    version="0.2.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -19,10 +37,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(patients.router)
+app.include_router(query.router)
+
 
 @app.get("/")
 def root():
-    return {"service": "medintel-ai", "version": "0.1.0"}
+    return {"service": "medintel-ai", "version": "0.2.0"}
 
 
 @app.get("/health")

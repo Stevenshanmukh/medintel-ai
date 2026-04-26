@@ -57,6 +57,15 @@ export default function Home() {
 
           {!health && !error && <div className="text-slate-500 text-sm">Checking...</div>}
         </div>
+
+        <div className="mt-6">
+          <a
+            href="/query"
+            className="inline-block px-4 py-2 bg-slate-900 text-white text-sm rounded-md hover:bg-slate-800 transition"
+          >
+            Open Clinical Query →
+          </a>
+        </div>
       </div>
     </main>
   );

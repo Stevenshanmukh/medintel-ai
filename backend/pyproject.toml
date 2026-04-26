@@ -16,6 +16,14 @@ dependencies = [
     "sentence-transformers==3.2.1",
     "torch==2.5.0",
     "numpy==1.26.4",
+    "langchain==0.3.7",
+    "langchain-openai==0.2.6",
+    "langchain-core==0.3.15",
+    "scispacy==0.5.4",
+    "spacy==3.7.5",
+    "negspacy==1.0.4",
+    "en_core_sci_sm @ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_core_sci_sm-0.5.4.tar.gz",
+    "en_ner_bc5cdr_md @ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bc5cdr_md-0.5.4.tar.gz",
 ]
 
 [project.optional-dependencies]
