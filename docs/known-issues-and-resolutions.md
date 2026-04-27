@@ -142,3 +142,9 @@ correct production architecture for clinical NLP — symbolic extractor for
 recall, LLM for precision — but adds ~$0.01 per visit in API cost and
 ~60-90 minutes of implementation time.
 
+## 7. Finding #6 cascade in longitudinal reasoning (KNOWN LIMITATION)
+
+**Symptom:** Subject-filtered comparisons (e.g. "compare her chest pain between visit 1 and visit 8") inherit the entity-granularity limitation. Visits where qualifiers were dropped during NER will be undercounted in filtered diffs. 
+
+**Resolution (automated warning):** The `trend_over_time` handler now includes a self-aware detection pass that checks the visit-level chief complaints. If a visit is reported as `absent` for the subject but the chief complaint contains the keyword (e.g. "chest"), the handler appends a one-line warning note flagging the specific visits where the trajectory may be underreporting mentions. The `compare_visits` handler does not currently include this automated check but is subject to the same underlying limitation.
+
