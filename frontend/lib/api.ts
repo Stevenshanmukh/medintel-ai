@@ -16,10 +16,25 @@ export interface RetrievedChunk {
   similarity: number;
 }
 
+export interface StructuredEvidenceRow {
+  visit_date: string | null;
+  entity_text: string | null;
+  normalized_text: string | null;
+  entity_type: string | null;
+  negated: boolean | null;
+  last_visit: string | null;
+  visit_id: string | null;
+}
+
+export type QueryPath = "rag" | "structured" | "refused";
+
 export interface QueryResponse {
   question: string;
   answer: string;
+  intent: string;
+  path: QueryPath;
   chunks: RetrievedChunk[];
+  structured_evidence: StructuredEvidenceRow[];
   model: string;
   latency_ms: number;
 }
