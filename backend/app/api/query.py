@@ -12,6 +12,8 @@ from app.core.structured_query import (
     get_current_medications,
     get_first_occurrence,
     get_unsafe_response,
+    compare_visits,
+    trend_over_time,
 )
 from app.db.session import get_db
 from app.schemas.query import (
@@ -30,17 +32,15 @@ CANDIDATE_POOL_SIZE = 50
 def _structured_to_evidence_rows(rows: list[dict]) -> list[StructuredEvidenceRow]:
     out: list[StructuredEvidenceRow] = []
     for r in rows:
-        out.append(
-            StructuredEvidenceRow(
-                visit_date=str(r["visit_date"]) if r.get("visit_date") else None,
-                entity_text=r.get("entity_text"),
-                normalized_text=r.get("normalized_text"),
-                entity_type=r.get("entity_type"),
-                negated=r.get("negated"),
-                last_visit=str(r["last_visit"]) if r.get("last_visit") else None,
-                visit_id=str(r["visit_id"]) if r.get("visit_id") else None,
-            )
-        )
+        # Convert any date/datetime/UUID objects to strings for Pydantic
+        # and include all fields from the dict.
+        data = {}
+        for k, v in r.items():
+            if v is not None and not isinstance(v, (str, int, float, bool, list, dict)):
+                data[k] = str(v)
+            else:
+                data[k] = v
+        out.append(StructuredEvidenceRow(**data))
     return out
 
 
@@ -106,6 +106,42 @@ def query_endpoint(payload: QueryRequest, db: Session = Depends(get_db)) -> Quer
                 latency_ms=int((time.perf_counter() - start) * 1000),
             )
         result = get_all_mentions(db, payload.patient_id, classified.subject)
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        return QueryResponse(
+            question=payload.question,
+            answer=result.answer,
+            intent=intent,
+            path="structured",
+            structured_evidence=_structured_to_evidence_rows(result.evidence_rows),
+            model="structured-sql",
+            latency_ms=latency_ms,
+        )
+
+    if intent == "compare_visits":
+        if not payload.patient_id:
+            raise HTTPException(400, "patient_id required for comparison queries")
+        result = compare_visits(
+            db,
+            payload.patient_id,
+            classified.anchor_a,
+            classified.anchor_b,
+            classified.subject,
+        )
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        return QueryResponse(
+            question=payload.question,
+            answer=result.answer,
+            intent=intent,
+            path="structured",
+            structured_evidence=_structured_to_evidence_rows(result.evidence_rows),
+            model="structured-sql",
+            latency_ms=latency_ms,
+        )
+
+    if intent == "trend_over_time":
+        if not payload.patient_id:
+            raise HTTPException(400, "patient_id required for trend queries")
+        result = trend_over_time(db, payload.patient_id, classified.subject)
         latency_ms = int((time.perf_counter() - start) * 1000)
         return QueryResponse(
             question=payload.question,

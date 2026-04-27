@@ -20,6 +20,8 @@ class RetrievedChunkResponse(BaseModel):
 
 
 class StructuredEvidenceRow(BaseModel):
+    # Fields from existing structured paths (current_medications, first_occurrence,
+    # all_mentions). All optional because different paths populate different fields.
     visit_date: str | None = None
     entity_text: str | None = None
     normalized_text: str | None = None
@@ -27,6 +29,20 @@ class StructuredEvidenceRow(BaseModel):
     negated: bool | None = None
     last_visit: str | None = None
     visit_id: str | None = None
+
+    # Fields from compare_visits diffs.
+    category: str | None = None         # "medication" | "symptom"
+    diff_status: str | None = None      # "added" | "removed" | "new" | "resolved"
+    name: str | None = None
+    visit_a: str | None = None
+    visit_b: str | None = None
+
+    # Fields from trend_over_time series.
+    chief_complaint: str | None = None
+    present: bool | None = None
+    status: str | None = None           # "affirmed" | "denied" | "absent"
+    severity: str | None = None
+    matched_entities: list[str] | None = None
 
 
 class QueryResponse(BaseModel):
