@@ -292,7 +292,7 @@ def _get_visit_entities(
               AND normalized_text ILIKE :pattern
             ORDER BY entity_type, normalized_text
         """
-        params = {"visit_id": str(visit_id), "pattern": f"%{subject_pattern}%"}
+        params = {"visit_id": str(visit_id), "pattern": subject_pattern}
     else:
         sql = """
             SELECT
@@ -342,6 +342,7 @@ def compare_visits(
     anchor_a_phrase: str | None,
     anchor_b_phrase: str | None,
     subject: str | None = None,
+    match_mode: str = "loose",
 ) -> StructuredAnswer:
     """
     Diff two visits across medications and affirmed symptoms.
@@ -400,7 +401,13 @@ def compare_visits(
         anchor_a, anchor_b = anchor_b, anchor_a
 
     # Apply subject filter via existing pattern helper.
-    subject_pattern = _subject_to_pattern(subject) if subject else None
+    if subject:
+        if match_mode == "strict":
+            subject_pattern = subject.lower()
+        else:
+            subject_pattern = f"%{_subject_to_pattern(subject)}%"
+    else:
+        subject_pattern = None
 
     data_a = _get_visit_entities(db, anchor_a.visit_id, subject_pattern)
     data_b = _get_visit_entities(db, anchor_b.visit_id, subject_pattern)
@@ -513,6 +520,7 @@ def trend_over_time(
     db: Session,
     patient_id: UUID,
     subject: str | None,
+    match_mode: str = "loose",
 ) -> StructuredAnswer:
     """
     Return an ordered series showing how a single subject (symptom or medication)
@@ -539,7 +547,15 @@ def trend_over_time(
             sql_used="",
         )
 
-    pattern = _subject_to_pattern(subject)
+    if match_mode == "strict":
+        # Strict: match the literal subject string (case-insensitive equality
+        # via ILIKE, no keyword reduction). Used by the timeline trend chart
+        # when the user picks a specific entity from a curated dropdown.
+        pattern = subject.lower()
+    else:
+        # Loose: keyword reduction lets "chest pain" match "chest tightness"
+        # etc. Used by free-text queries via the LLM classifier.
+        pattern = _subject_to_pattern(subject)
 
     # One query, all visits, with the entities for this subject left-joined.
     # GROUP BY at the visit level so we get one row per visit even when
@@ -572,9 +588,12 @@ def trend_over_time(
         ORDER BY v.visit_date
     """
 
+    # Strict mode: ILIKE with the exact lowercase subject (no wildcards).
+    # Loose mode: ILIKE with %pattern% so partial matches work.
+    bound_pattern = pattern if match_mode == "strict" else f"%{pattern}%"
     rows = db.execute(
         text(sql),
-        {"patient_id": str(patient_id), "pattern": f"%{pattern}%"},
+        {"patient_id": str(patient_id), "pattern": bound_pattern},
     ).mappings().all()
     rows = [dict(r) for r in rows]
 

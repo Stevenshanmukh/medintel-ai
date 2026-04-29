@@ -14,6 +14,13 @@ import {
   type QueryResponse,
   type StructuredEvidenceRow,
 } from "@/lib/api";
+import { CompareEvidence } from "@/components/compare-evidence";
+import {
+  TrendChartView,
+  TrendPoint,
+  extractFindingNote,
+  evidenceRowsToPoints,
+} from "@/components/trend-chart-view";
 
 const PATH_LABELS: Record<string, { label: string; tone: string }> = {
   structured: { label: "Structured query", tone: "bg-blue-100 text-blue-900 border-blue-200" },
@@ -26,6 +33,8 @@ const INTENT_LABELS: Record<string, string> = {
   first_occurrence: "First occurrence",
   all_mentions: "All mentions",
   narrative_synthesis: "Narrative synthesis",
+  compare_visits: "Compare visits",
+  trend_over_time: "Trend over time",
   unanswerable_or_unsafe: "Unsafe / out of scope",
 };
 
@@ -33,6 +42,8 @@ const SAMPLE_QUERIES = [
   "What medications is Sarah Chen currently taking?",
   "When did chest pain first appear?",
   "List every visit where she mentioned shortness of breath",
+  "Compare her first and most recent visit",
+  "How has her chest pain progressed?",
   "How have her symptoms progressed over time?",
   "Should she stop taking her metoprolol?",
 ];
@@ -141,6 +152,48 @@ function ResultPanel({ result }: { result: QueryResponse }) {
   const pathMeta = PATH_LABELS[result.path] ?? PATH_LABELS.rag;
   const intentLabel = INTENT_LABELS[result.intent] ?? result.intent;
 
+  // Longitudinal intents get a stacked layout — answer on top, evidence
+  // (with dedicated visual treatment) below — because the diff grid and
+  // the chart both need horizontal space.
+  const isLongitudinal =
+    result.intent === "compare_visits" || result.intent === "trend_over_time";
+
+  if (isLongitudinal) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <Badge className={`${pathMeta.tone} border`}>{pathMeta.label}</Badge>
+              <Badge variant="outline">{intentLabel}</Badge>
+            </div>
+            <CardTitle className="text-base mt-1">Answer</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none whitespace-pre-wrap text-slate-800">
+              {result.answer}
+            </div>
+          </CardContent>
+        </Card>
+
+        {result.intent === "compare_visits" && (
+          <CompareEvidence rows={result.structured_evidence} answer={result.answer} />
+        )}
+
+        {result.intent === "trend_over_time" && (
+          <TrendChartView
+            points={evidenceRowsToPoints(result.structured_evidence)}
+            findingNote={extractFindingNote(result.answer)}
+            title="Trend over time"
+            description="Mentions per visit, color-coded by status"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Default Week 3 layout for the other five intents — answer in the wide
+  // column, evidence in the sidebar.
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2">
@@ -165,16 +218,16 @@ function ResultPanel({ result }: { result: QueryResponse }) {
         </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[500px] px-6 pb-6">
-              {result.path === "rag" && <ChunkEvidence chunks={result.chunks} />}
-              {result.path === "structured" && (
-                <StructuredEvidence rows={result.structured_evidence} />
-              )}
-              {result.path === "refused" && (
-                <p className="text-sm text-slate-600 mt-2">
-                  No evidence retrieved. The query was routed to the safety policy and refused
-                  without accessing patient data.
-                </p>
-              )}
+            {result.path === "rag" && <ChunkEvidence chunks={result.chunks} />}
+            {result.path === "structured" && (
+              <StructuredEvidence rows={result.structured_evidence} />
+            )}
+            {result.path === "refused" && (
+              <p className="text-sm text-slate-600 mt-2">
+                No evidence retrieved. The query was routed to the safety policy and refused
+                without accessing patient data.
+              </p>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>

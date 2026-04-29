@@ -126,6 +126,7 @@ def query_endpoint(payload: QueryRequest, db: Session = Depends(get_db)) -> Quer
             classified.anchor_a,
             classified.anchor_b,
             classified.subject,
+            match_mode=payload.match_mode,
         )
         latency_ms = int((time.perf_counter() - start) * 1000)
         return QueryResponse(
@@ -141,7 +142,12 @@ def query_endpoint(payload: QueryRequest, db: Session = Depends(get_db)) -> Quer
     if intent == "trend_over_time":
         if not payload.patient_id:
             raise HTTPException(400, "patient_id required for trend queries")
-        result = trend_over_time(db, payload.patient_id, classified.subject)
+        result = trend_over_time(
+            db,
+            payload.patient_id,
+            classified.subject,
+            match_mode=payload.match_mode,
+        )
         latency_ms = int((time.perf_counter() - start) * 1000)
         return QueryResponse(
             question=payload.question,

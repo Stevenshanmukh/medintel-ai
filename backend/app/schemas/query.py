@@ -8,6 +8,7 @@ class QueryRequest(BaseModel):
     question: str = Field(..., min_length=3, max_length=2000)
     patient_id: UUID | None = None
     k: int = Field(default=5, ge=1, le=20)
+    match_mode: str = Field(default="loose", pattern="^(loose|strict)$")
 
 
 class RetrievedChunkResponse(BaseModel):

@@ -144,7 +144,17 @@ recall, LLM for precision — but adds ~$0.01 per visit in API cost and
 
 ## 7. Finding #6 cascade in longitudinal reasoning (KNOWN LIMITATION)
 
-**Symptom:** Subject-filtered comparisons (e.g. "compare her chest pain between visit 1 and visit 8") inherit the entity-granularity limitation. Visits where qualifiers were dropped during NER will be undercounted in filtered diffs. 
+**Symptom:** Subject-filtered comparisons (e.g., "compare her chest pain between visit 1 and visit 8") inherit the entity-granularity limitation. Visits where qualifiers were dropped during NER will be undercounted in filtered diffs.
 
-**Resolution (automated warning):** The `trend_over_time` handler now includes a self-aware detection pass that checks the visit-level chief complaints. If a visit is reported as `absent` for the subject but the chief complaint contains the keyword (e.g. "chest"), the handler appends a one-line warning note flagging the specific visits where the trajectory may be underreporting mentions. The `compare_visits` handler does not currently include this automated check but is subject to the same underlying limitation.
+**Resolution (automated warning):** The `trend_over_time` handler now includes a self-aware detection pass that checks the visit-level chief complaints. If a visit is reported as `absent` for the subject but the chief complaint contains the keyword (e.g., "chest"), the handler appends a one-line warning note flagging the specific visits where the trajectory may be underreporting mentions. The `compare_visits` handler does not currently include this automated check but is subject to the same underlying limitation.
+
+## 8. Loss of ambient state and qualifiers in NER (Finding #7)
+
+**Symptom:** Entities mentioned as "past history" or medications taken "continuously" are sometimes mischaracterized or missed in per-visit extraction. 
+- **Example A:** Sarah Chen has "heart disease" affirmed at Visit 1, despite having no cardiac history at that time (she was being screened for it). NER extracted the mention but lost the "screen for" qualifier.
+- **Example B:** `lisinopril` is missing from the structured record for Visits 2 and 5, even though the patient remained on the medication throughout her care. At those visits, the drug was not explicitly mentioned by name in the transcript (it was ambient state), so the per-mention extractor missed it.
+
+**Root Cause:** This is the same root cause as Finding #6 — entity extraction is performed turn-by-turn or mention-by-mention and loses the surrounding qualifiers ("history of," "screening for") as well as the "ambient state" of the patient's record.
+
+**Resolution:** Documented, not fixed. The project accepts that the structured layer is a "mention-based timeline," not a "reconciled medical record." Interestingly, the timeline UI surfaces these gaps visually (e.g., a medication badge disappearing and reappearing), which serves as a prompt for the clinician to verify the record rather than trusting a potentially halluncinated "reconciled" view. Addressable in the future via the same LLM-refinement pass proposed for Finding #6.
 
