@@ -172,3 +172,34 @@ export function getTrendableSubjects(
 
   return { symptoms, medications };
 }
+
+// --- Risk alerts ---
+
+export interface RiskFinding {
+  detector: string;
+  severity: "low" | "moderate" | "high" | string;
+  title: string;
+  summary: string;
+  evidence: Record<string, unknown>;
+}
+
+export interface RiskAlertsResponse {
+  patient: PatientHeader;
+  findings: RiskFinding[];
+  severity_counts: {
+    high: number;
+    moderate: number;
+    low: number;
+  };
+  total_visits: number;
+}
+
+export async function getPatientRiskAlerts(
+  patientId: string
+): Promise<RiskAlertsResponse> {
+  const res = await fetch(`${API_URL}/api/patients/${patientId}/risk_alerts`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch risk alerts: ${res.status}`);
+  }
+  return res.json();
+}

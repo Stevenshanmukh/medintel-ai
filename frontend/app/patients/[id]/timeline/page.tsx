@@ -24,9 +24,11 @@ import {
 
 import {
   getPatientVisits,
+  getPatientRiskAlerts,
   getTrendableSubjects,
   runQuery,
   PatientVisitsResponse,
+  RiskAlertsResponse,
   VisitTimelineEntry,
   StructuredEvidenceRow,
   TrendableSubjects,
@@ -39,6 +41,8 @@ import {
   evidenceRowsToPoints,
 } from "@/components/trend-chart-view";
 
+import { RiskAlertsCard } from "@/components/risk-alerts-card";
+
 
 export default function TimelinePage() {
   const params = useParams<{ id: string }>();
@@ -47,6 +51,10 @@ export default function TimelinePage() {
   const [data, setData] = useState<PatientVisitsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [riskAlerts, setRiskAlerts] = useState<RiskAlertsResponse | null>(null);
+  const [riskLoading, setRiskLoading] = useState(true);
+  const [riskError, setRiskError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!patientId) return;
@@ -58,6 +66,18 @@ export default function TimelinePage() {
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
+  }, [patientId]);
+
+  useEffect(() => {
+    if (!patientId) return;
+    setRiskLoading(true);
+    getPatientRiskAlerts(patientId)
+      .then((res) => {
+        setRiskAlerts(res);
+        setRiskError(null);
+      })
+      .catch((e) => setRiskError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setRiskLoading(false));
   }, [patientId]);
 
   const trendableSubjects = useMemo<TrendableSubjects>(() => {
@@ -101,6 +121,14 @@ export default function TimelinePage() {
           {data.visits.length !== 1 ? "s" : ""}
         </p>
       </header>
+
+      <Separator />
+
+      <RiskAlertsCard
+        data={riskAlerts}
+        loading={riskLoading}
+        error={riskError}
+      />
 
       <Separator />
 

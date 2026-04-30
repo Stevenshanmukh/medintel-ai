@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "source": "Curated for MedIntel AI demonstration. References from openFDA drug labels and standard pharmacology references. Not for clinical use.",
+  "interactions": [
+    {
+      "drugs": ["aspirin", "clopidogrel"],
+      "severity": "moderate",
+      "concern": "Dual antiplatelet therapy. Both inhibit platelet aggregation. Increased bleeding risk, especially GI bleeding. Often prescribed together intentionally after stent placement, but the combined risk is real and warrants monitoring.",
+      "category": "bleeding_risk"
+    },
+    {
+      "drugs": ["aspirin", "warfarin"],
+      "severity": "high",
+      "concern": "Combined antiplatelet and anticoagulant action significantly increases bleeding risk. Generally avoided unless specifically indicated.",
+      "category": "bleeding_risk"
+    },
+    {
+      "drugs": ["clopidogrel", "omeprazole"],
+      "severity": "moderate",
+      "concern": "Omeprazole inhibits CYP2C19, reducing conversion of clopidogrel to its active metabolite. May reduce antiplatelet effect. Pantoprazole is generally preferred when a PPI is needed.",
+      "category": "metabolic_interaction"
+    },
+    {
+      "drugs": ["lisinopril", "spironolactone"],
+      "severity": "moderate",
+      "concern": "Both can raise serum potassium. Combined use risks hyperkalemia. Requires periodic potassium monitoring.",
+      "category": "electrolyte_risk"
+    },
+    {
+      "drugs": ["lisinopril", "ibuprofen"],
+      "severity": "moderate",
+      "concern": "NSAIDs can blunt the antihypertensive effect of ACE inhibitors and increase risk of acute kidney injury, especially in older patients.",
+      "category": "renal_risk"
+    },
+    {
+      "drugs": ["metoprolol", "verapamil"],
+      "severity": "high",
+      "concern": "Both negatively affect cardiac conduction. Combination can cause severe bradycardia, AV block, or hypotension.",
+      "category": "cardiac_conduction"
+    },
+    {
+      "drugs": ["atorvastatin", "clarithromycin"],
+      "severity": "moderate",
+      "concern": "Clarithromycin inhibits CYP3A4, raising atorvastatin levels and increasing risk of myopathy or rhabdomyolysis.",
+      "category": "metabolic_interaction"
+    },
+    {
+      "drugs": ["nitroglycerin", "sildenafil"],
+      "severity": "high",
+      "concern": "Combined vasodilation can cause severe, prolonged hypotension. Contraindicated.",
+      "category": "hypotension_risk"
+    }
+  ]
+}
