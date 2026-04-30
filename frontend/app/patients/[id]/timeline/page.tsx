@@ -268,7 +268,10 @@ function VisitCard({ visit }: { visit: VisitTimelineEntry }) {
   const deniedSymptoms = visit.entities.symptoms_denied;
 
   return (
-    <div className="relative pl-12">
+    <div
+      id={`visit-${visit.visit_number}`}
+      className="relative pl-12 scroll-mt-8"
+    >
       <div className="absolute left-2 top-4 w-5 h-5 rounded-full bg-blue-500 border-4 border-white shadow" />
 
       <Card>

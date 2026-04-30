@@ -20,9 +20,10 @@ export interface RiskAlertsCardProps {
   data: RiskAlertsResponse | null;
   loading?: boolean;
   error?: string | null;
+  compact?: boolean;
 }
 
-export function RiskAlertsCard({ data, loading, error }: RiskAlertsCardProps) {
+export function RiskAlertsCard({ data, loading, error, compact }: RiskAlertsCardProps) {
   if (loading) {
     return (
       <Card>
@@ -72,6 +73,15 @@ export function RiskAlertsCard({ data, loading, error }: RiskAlertsCardProps) {
             No findings. The detectors found no escalating symptoms, new
             medications, or known drug interactions in the current record.
           </p>
+        ) : compact ? (
+          <div className="space-y-1.5">
+            {findings.map((f, idx) => (
+              <CompactFindingItem
+                key={`${f.detector}-${f.title}-${idx}`}
+                finding={f}
+              />
+            ))}
+          </div>
         ) : (
           <div className="space-y-3">
             {findings.map((f, idx) => (
@@ -115,6 +125,33 @@ function SeverityCountsBadge({
           {counts.low} low
         </Badge>
       )}
+    </div>
+  );
+}
+
+
+function CompactFindingItem({ finding }: { finding: RiskFinding }) {
+  const dotColor =
+    finding.severity === "high"
+      ? "bg-rose-500"
+      : finding.severity === "moderate"
+      ? "bg-amber-500"
+      : "bg-slate-400";
+
+  const detectorLabel = formatDetectorLabel(finding.detector);
+
+  return (
+    <div className="flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-slate-50">
+      <span
+        className={`flex-shrink-0 w-2 h-2 rounded-full ${dotColor}`}
+        aria-hidden="true"
+      />
+      <p className="text-sm text-slate-900 flex-1 truncate">
+        {finding.title}
+      </p>
+      <span className="text-xs text-slate-500 flex-shrink-0">
+        {detectorLabel}
+      </span>
     </div>
   );
 }
