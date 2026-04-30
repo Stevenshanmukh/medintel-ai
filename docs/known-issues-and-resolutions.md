@@ -172,3 +172,13 @@ A detector that flags any delta between adjacent visits would be noisier due to 
 
 **Future work:** A more sophisticated "regimen change" detector would identify significant shifts in the active list (e.g., the transition from 1 to 6 medications) by looking at temporal clusters of appearances. This requires the same LLM-based refinement pass proposed for Finding #6 to distinguish between "mention gap" and "discontinuation."
 
+## 10. Dashboard medication source: Latest-visit vs. Longitudinal windowing
+
+**Design Decision:** The dashboard's "Current medications" card displays entities from the `latest_visit` only, rather than the `current_medications` window function (which looks back several months to capture medications mentioned as "ongoing").
+
+**Rationale:**
+1. **Clinical Convention:** Clinicians often scan the latest encounter note as the "source of truth" for the current status. Using the latest visit's `medications_affirmed` list matches this mental model and ensures the dashboard is fast (no cross-visit join required for the summary card).
+2. **Robustness to Extraction Gaps:** The longitudinal window function is more susceptible to **Finding #8** (over-accumulation of ambient state). If a medication is extracted once and then never mentioned again, the window function might continue to report it as "current" long after it was discontinued.
+3. **Role of the Query Interface:** The project treats the dashboard as a high-level "snapshot" and the query interface as the "canonical answer" for specific clinical questions. For the question "What is she taking right now across her whole history?", the `current_medications` intent provides the more sophisticated, windowed result.
+
+**Result:** The dashboard is a fast, note-based summary. The query interface is the deep-reasoning tool.

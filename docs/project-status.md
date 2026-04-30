@@ -1,7 +1,7 @@
 # MedIntel AI — Current Project Status
 
 ## Where we are
-Week 3 complete. Hybrid RAG + structured query system fully functional.
+Week 6 complete. Patient dashboard, risk detection engine, and visit timeline all fully integrated.
 
 ## Stack
 - Backend: FastAPI, Python 3.11, SQLAlchemy, pgvector, scispaCy + negspacy, LangChain
@@ -11,15 +11,12 @@ Week 3 complete. Hybrid RAG + structured query system fully functional.
 - Reranker: cross-encoder/ms-marco-MiniLM-L-6-v2 (local CPU, top-50 candidate pool)
 - Database: Postgres 16 + pgvector
 
-## What's working end-to-end
 - Sarah Chen synthetic data: 1 patient, 8 visits, 61 chunks, 123 entities
-- Five query paths via intent classifier:
-  1. current_medications → SQL with drug-name validation against COMMON_MEDICATIONS list
-  2. first_occurrence → SQL with smart subject keyword extraction (_subject_to_pattern)
-  3. all_mentions → SQL with affirmed/negated split
-  4. narrative_synthesis → RAG with cross-encoder reranking
-  5. unanswerable_or_unsafe → safety refusal, no patient data accessed
-- Frontend renders three distinct visual modes by path
+- Intent-based clinical QA: SQL-backed structured paths (medications, first occurrence, all mentions) + RAG-backed narrative synthesis + safety refusals
+- Patient List: Central directory of all patients with visit counts
+- Patient Dashboard: Compact clinical summary including risk alerts (severity hierarchy), current medications/concerns, and recent activity (last 3 visits)
+- Visit Timeline: Full longitudinal scroll with deep-links from dashboard and interactive trend charting
+- Explainability: Unified visual system for disclosing evidence (SQL results or RAG chunks) across all paths
 
 ## Documented limitations (in docs/known-issues-and-resolutions.md)
 1. Temporal recall failure on "first appearance" queries (partially resolved via structured layer)
@@ -29,12 +26,8 @@ Week 3 complete. Hybrid RAG + structured query system fully functional.
 5. Cross-turn negation (resolved, with over-negation caveat on compound questions)
 6. scispaCy entity granularity loss (e.g. "tightness" extracted without "chest" qualifier)
 
-## What's next: Full plan, weeks 4-8
-- Week 4: Longitudinal reasoning + visit timeline frontend page
-- Week 5: Risk detection engine
-- Week 6: Patient dashboard + explainability panel
-- Week 7: Evaluation harness with real numbers
-- Week 8: README, deployment, demo
+- Week 7: Evaluation harness with real numbers (intent accuracy, retrieval metrics, GPT-4-as-judge scoring)
+- Week 8: README, deployment, demo script
 
 ## Key file locations
 - backend/app/core/: ingestion.py, embeddings.py, retrieval.py, reranking.py,
