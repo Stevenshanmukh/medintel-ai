@@ -158,3 +158,17 @@ recall, LLM for precision — but adds ~$0.01 per visit in API cost and
 
 **Resolution:** Documented, not fixed. The project accepts that the structured layer is a "mention-based timeline," not a "reconciled medical record." Interestingly, the timeline UI surfaces these gaps visually (e.g., a medication badge disappearing and reappearing), which serves as a prompt for the clinician to verify the record rather than trusting a potentially halluncinated "reconciled" view. Addressable in the future via the same LLM-refinement pass proposed for Finding #6.
 
+## 9. Zero-finding result on "new medication" detector (Sarah Chen)
+
+**Symptom:** The `new_medication` detector returns zero findings for Sarah Chen at Visit 8, even though her medication regimen visibly changed during the arc (adding aspirin, atorvastatin, clopidogrel, metoprolol, and omeprazole post-stent).
+
+**Design Choice:** The detector defines "new" as "first-ever appearance in the patient's longitudinal record."
+- For Sarah Chen, all the "post-stent" medications appeared earlier in her record (Visit 6 or 7) before the most recent visit (Visit 8). 
+- Thus, at Visit 8, they are "ongoing," not "new."
+- The detector correctly identifies that no medications appeared *for the first time ever* at Visit 8.
+
+**Rationale for "new ever" vs "new since last visit":**
+A detector that flags any delta between adjacent visits would be noisier due to **Finding #7** (extraction-state inconsistency). For example, `lisinopril` is missing from the extraction history for Visits 2 and 5. An adjacent-visit detector would incorrectly flag `lisinopril` as a "new medication" at Visits 3 and 6 when it was actually ambient state. By looking at the entire prior history, the "new ever" detector is robust to these extraction gaps — if a med was ever seen before, it's not "new."
+
+**Future work:** A more sophisticated "regimen change" detector would identify significant shifts in the active list (e.g., the transition from 1 to 6 medications) by looking at temporal clusters of appearances. This requires the same LLM-based refinement pass proposed for Finding #6 to distinguish between "mention gap" and "discontinuation."
+
